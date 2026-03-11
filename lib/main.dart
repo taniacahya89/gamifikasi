@@ -18,7 +18,17 @@ class HabitQuestApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => MissionProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, MissionProvider>(
+          create: (_) => MissionProvider(),
+          update: (_, auth, missions) {
+            // Wire callback: mission completion → auth XP/streak
+            missions!.onMissionCompleted = (xpEarned) {
+              auth.onMissionCompleted(xpEarned);
+              auth.recordActivity();
+            };
+            return missions;
+          },
+        ),
       ],
       child: const _RouterApp(),
     );
@@ -33,7 +43,7 @@ class _RouterApp extends StatefulWidget {
 }
 
 class _RouterAppState extends State<_RouterApp> {
-  late final router = createRouter(context);
+  late final _router = createRouter(context);
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +51,7 @@ class _RouterAppState extends State<_RouterApp> {
       title: 'HabitQuest',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      routerConfig: router,
+      routerConfig: _router,
     );
   }
 }

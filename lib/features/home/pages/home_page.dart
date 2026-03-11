@@ -9,6 +9,7 @@ import '../../auth/providers/auth_provider.dart';
 import '../../mission/providers/mission_provider.dart';
 import '../widgets/home_header.dart';
 import '../widgets/category_card.dart';
+import '../../auth/models/user_model.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -20,26 +21,18 @@ class HomePage extends StatelessWidget {
 
     if (user == null) return const SizedBox.shrink();
 
-    final completedCategories =
-        missionProvider.completedMissions.map((m) => m.category).toSet();
+    // Categories that have ≥1 completed mission
+    final completedCategories = missionProvider.completedMissions
+        .map((m) => m.category)
+        .toSet();
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(AppRoutes.createMission),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.white,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text(
-          AppStrings.createMission,
-          style: TextStyle(fontWeight: FontWeight.w800),
-        ),
-      ),
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: HomeHeader(user: user)),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
             sliver: SliverToBoxAdapter(
               child: Text(
                 AppStrings.dailyActivity,
@@ -53,39 +46,28 @@ class HomePage extends StatelessWidget {
             ),
           ),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverGrid(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
                   final cat = appCategories[index];
-                  final isCompleted = completedCategories.contains(cat.id);
-                  final missions =
-                      missionProvider.getMissionsByCategory(cat.id);
-                  final mission =
-                      missions.isNotEmpty ? missions.first : null;
-
+                  final hasCompleted =
+                      completedCategories.contains(cat.id);
                   return CategoryCard(
                     data: cat,
-                    isCompleted: isCompleted,
-                    onTap: () {
-                      if (mission != null) {
-                        context.push(AppRoutes.missionDetailPath(mission.id));
-                      } else {
-                        context.push(
-                          AppRoutes.createMission,
-                          extra: cat.id,
-                        );
-                      }
-                    },
+                    hasCompletedMission: hasCompleted,
+                    // Always navigate to mission list
+                    onTap: () => context
+                        .push(AppRoutes.missionListPath(cat.id)),
                   );
                 },
                 childCount: appCategories.length,
               ),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 0.85,
+                mainAxisSpacing: 14,
+                crossAxisSpacing: 14,
+                childAspectRatio: 0.9,
               ),
             ),
           ),

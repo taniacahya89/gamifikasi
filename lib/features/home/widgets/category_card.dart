@@ -66,103 +66,106 @@ class CategoryCard extends StatelessWidget {
   const CategoryCard({
     super.key,
     required this.data,
-    required this.isCompleted,
+    required this.hasCompletedMission,
     required this.onTap,
   });
 
   final CategoryData data;
-  final bool isCompleted;
+  final bool hasCompletedMission;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: data.cardColor,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x12000000),
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.fromLTRB(12, 20, 12, 14),
-          child: Column(
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: data.iconBgColor,
-                  borderRadius: BorderRadius.circular(14),
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        children: [
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: data.cardColor,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x12000000),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
                 ),
-                child: Center(
-                  child: Text(data.icon, style: const TextStyle(fontSize: 28)),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                data.label,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.darkText,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              GestureDetector(
-                onTap: onTap,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 6,
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 18),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: data.iconBgColor,
+                    borderRadius: BorderRadius.circular(14),
                   ),
+                  child: Center(
+                    child:
+                        Text(data.icon, style: const TextStyle(fontSize: 26)),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  data.label,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.darkText,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
                   decoration: BoxDecoration(
                     color: const Color(0xFFD8D8E8),
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: Text(
-                    isCompleted ? 'View' : 'Select',
-                    style: const TextStyle(
-                      fontSize: 12,
+                  child: const Text(
+                    'Select',
+                    style: TextStyle(
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF555555),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        if (isCompleted)
-          Positioned(
-            top: 8,
-            right: 8,
-            child: Container(
-              width: 22,
-              height: 22,
-              decoration: const BoxDecoration(
-                color: AppColors.successGreen,
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Text(
-                  '✓',
-                  style: TextStyle(
-                    color: AppColors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+          if (hasCompletedMission)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: const BoxDecoration(
+                  color: AppColors.successGreen,
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: Text(
+                    '✓',
+                    style: TextStyle(
+                      color: AppColors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

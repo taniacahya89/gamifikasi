@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../features/auth/pages/login_page.dart';
 import '../features/auth/pages/signup_page.dart';
 import '../features/auth/providers/auth_provider.dart';
+import '../features/mission/pages/mission_list_page.dart';
 import '../features/mission/pages/mission_detail_page.dart';
 import '../features/mission/pages/create_mission_page.dart';
 import '../features/mission/pages/mission_progress_detail_page.dart';
@@ -21,6 +22,8 @@ class AppRoutes {
   static const String createMission = '/create-mission';
   static const String editProfile = '/edit-profile';
 
+  static String missionListPath(String category) =>
+      '/mission-list/${Uri.encodeComponent(category)}';
   static String missionDetailPath(String id) => '/mission/$id';
   static String missionProgressPath(String id) => '/mission-progress/$id';
 }
@@ -43,33 +46,44 @@ GoRouter createRouter(BuildContext context) {
     routes: [
       GoRoute(
         path: AppRoutes.splash,
-        builder: (context, state) => const SplashScreen(),
+        builder: (_, __) => const SplashScreen(),
       ),
       GoRoute(
         path: AppRoutes.login,
-        builder: (context, state) => const LoginPage(),
+        builder: (_, __) => const LoginPage(),
       ),
       GoRoute(
         path: AppRoutes.signUp,
-        builder: (context, state) => const SignUpPage(),
+        builder: (_, __) => const SignUpPage(),
       ),
+      // Bottom-nav shell
       ShellRoute(
-        builder: (context, state, child) => MainShell(child: child),
+        builder: (_, __, child) => MainShell(child: child),
         routes: [
           GoRoute(
             path: '/home',
-            builder: (context, state) => const SizedBox.shrink(),
+            builder: (_, __) => const SizedBox.shrink(),
           ),
           GoRoute(
             path: '/progress-tab',
-            builder: (context, state) => const SizedBox.shrink(),
+            builder: (_, __) => const SizedBox.shrink(),
           ),
           GoRoute(
             path: '/profile-tab',
-            builder: (context, state) => const SizedBox.shrink(),
+            builder: (_, __) => const SizedBox.shrink(),
           ),
         ],
       ),
+      // Mission list per category
+      GoRoute(
+        path: '/mission-list/:category',
+        builder: (context, state) {
+          final cat = Uri.decodeComponent(
+              state.pathParameters['category'] ?? '');
+          return MissionListPage(category: cat);
+        },
+      ),
+      // Mission detail (daily tasks)
       GoRoute(
         path: '/mission/:id',
         builder: (context, state) {
@@ -77,6 +91,7 @@ GoRouter createRouter(BuildContext context) {
           return MissionDetailPage(missionId: id);
         },
       ),
+      // Create mission
       GoRoute(
         path: AppRoutes.createMission,
         builder: (context, state) {
@@ -84,6 +99,7 @@ GoRouter createRouter(BuildContext context) {
           return CreateMissionPage(preselectedCategory: preselected);
         },
       ),
+      // Mission progress detail
       GoRoute(
         path: '/mission-progress/:id',
         builder: (context, state) {
@@ -93,7 +109,7 @@ GoRouter createRouter(BuildContext context) {
       ),
       GoRoute(
         path: AppRoutes.editProfile,
-        builder: (context, state) => const EditProfilePage(),
+        builder: (_, __) => const EditProfilePage(),
       ),
     ],
   );

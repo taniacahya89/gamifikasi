@@ -9,6 +9,7 @@ import '../../../routes/app_router.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../mission/providers/mission_provider.dart';
 import '../widgets/progress_mission_card.dart';
+import '../../auth/models/user_model.dart';
 
 class ProgressPage extends StatelessWidget {
   const ProgressPage({super.key});
@@ -16,29 +17,22 @@ class ProgressPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
-    final missionProvider = context.watch<MissionProvider>();
-    final missions = missionProvider.missions;
-    final completedCount = missionProvider.completedMissions.length;
+    final missions = context.watch<MissionProvider>().missions;
 
-    final totalDoneTasks =
-        missions.fold(0, (sum, m) => sum + m.completedTasks);
-    final streak = (completedCount * 2 + totalDoneTasks).clamp(0, 7);
+    final activeMissions = missions.where((m) => m.completedTasks > 0).toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(child: _ProgressHeader()),
+          SliverToBoxAdapter(child: const _ProgressHeader()),
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
             sliver: SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _XpSummaryCard(
-                    xp: user?.xp ?? 0,
-                    level: user?.level ?? 1,
-                  ),
+                  _XpSummaryCard(user: user),
                   const SizedBox(height: 20),
                   const Text(
                     AppStrings.missionProgress,
@@ -53,13 +47,13 @@ class ProgressPage extends StatelessWidget {
               ),
             ),
           ),
-          missions.isEmpty
+          activeMissions.isEmpty
               ? const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.all(40),
                     child: Center(
                       child: Text(
-                        'No missions yet.\nStart a mission from Home!',
+                        'No progress yet.\nStart completing tasks!',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: AppColors.greyText,
@@ -74,7 +68,7 @@ class ProgressPage extends StatelessWidget {
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        final mission = missions[index];
+                        final mission = activeMissions[index];
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 14),
                           child: ProgressMissionCard(
@@ -85,14 +79,14 @@ class ProgressPage extends StatelessWidget {
                           ),
                         );
                       },
-                      childCount: missions.length,
+                      childCount: activeMissions.length,
                     ),
                   ),
                 ),
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
             sliver: SliverToBoxAdapter(
-              child: _StreakCard(streak: streak),
+              child: _StreakCard(streak: user?.streak ?? 0),
             ),
           ),
         ],
@@ -136,13 +130,16 @@ class _ProgressHeader extends StatelessWidget {
 }
 
 class _XpSummaryCard extends StatelessWidget {
-  const _XpSummaryCard({required this.xp, required this.level});
-
-  final int xp;
-  final int level;
+  const _XpSummaryCard({required this.user});
+  final dynamic user;
 
   @override
   Widget build(BuildContext context) {
+    final xp = user?.xp ?? 0;
+    final level = user?.level ?? 1;
+    final xpInLevel = xp % UserModel.xpPerLevel;
+    final missions = user?.completedMissionsCount ?? 0;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -155,44 +152,84 @@ class _XpSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            AppStrings.totalXp,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: AppColors.primary,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      AppStrings.totalXp,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '$xp',
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.coral,
+                            ),
+                          ),
+                          const TextSpan(
+                            text: ' XP',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.greyText,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Level badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Column(
+                  children: [
+                    const Text('🏅', style: TextStyle(fontSize: 22)),
+                    Text(
+                      'Lv. $level',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.primary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: '$xp',
-                  style: const TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.coral,
-                  ),
-                ),
-                const TextSpan(
-                  text: ' XP',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.greyText,
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(height: 12),
+          // XP to next level
+          AppProgressBar(
+            value: xpInLevel.toDouble(),
+            max: UserModel.xpPerLevel.toDouble(),
+            height: 10,
           ),
           const SizedBox(height: 4),
           Text(
-            'Level $level • Keep going! 🔥',
-            style: const TextStyle(fontSize: 12, color: AppColors.greyText),
+            '${UserModel.xpPerLevel - xpInLevel} XP to next level • $missions missions done',
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.greyText,
+            ),
           ),
-          const SizedBox(height: 12),
-          AppProgressBar(value: xp.toDouble(), max: 1000, height: 10),
         ],
       ),
     );
@@ -201,7 +238,6 @@ class _XpSummaryCard extends StatelessWidget {
 
 class _StreakCard extends StatelessWidget {
   const _StreakCard({required this.streak});
-
   final int streak;
 
   @override
@@ -216,44 +252,48 @@ class _StreakCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          const Text(
-            '🔥 ${AppStrings.currentStreak}',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              color: AppColors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: '$streak',
-                  style: const TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.white,
-                  ),
+          const Text('🔥', style: TextStyle(fontSize: 40)),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                AppStrings.currentStreak,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.white,
                 ),
-                const TextSpan(
-                  text: AppStrings.days,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xCCFFFFFF),
-                  ),
+              ),
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '$streak',
+                      style: const TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.white,
+                      ),
+                    ),
+                    const TextSpan(
+                      text: ' days',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xCCFFFFFF),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            AppStrings.keepGoing,
-            style: TextStyle(fontSize: 12, color: Color(0xCCFFFFFF)),
+              ),
+              const Text(
+                AppStrings.keepGoing,
+                style:
+                    TextStyle(fontSize: 11, color: Color(0xCCFFFFFF)),
+              ),
+            ],
           ),
         ],
       ),

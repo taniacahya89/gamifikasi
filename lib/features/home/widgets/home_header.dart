@@ -17,58 +17,86 @@ class HomeHeader extends StatelessWidget {
         color: AppColors.primary,
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
-      padding: const EdgeInsets.fromLTRB(24, 56, 24, 28),
+      padding: const EdgeInsets.fromLTRB(24, 56, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '${AppStrings.greeting}${user.fullName}${AppStrings.greetingSuffix} 👋',
-            style: const TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w800,
-              color: AppColors.white,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${AppStrings.greeting}${user.fullName}${AppStrings.greetingSuffix} 👋',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      AppStrings.whatImprove,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xCCFFFFFF),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Streak badge
+              _StreakBadge(streak: user.streak),
+            ],
           ),
-          const SizedBox(height: 4),
-          const Text(
-            AppStrings.whatImprove,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Color(0xCCFFFFFF),
-            ),
+          const SizedBox(height: 18),
+          _ProgressRow(
+            label: AppStrings.xpPoints,
+            value: (user.xp % UserModel.xpPerLevel).toDouble(),
+            max: UserModel.xpPerLevel.toDouble(),
+            display: '${user.xp} XP',
           ),
-          const SizedBox(height: 20),
-          _XpLevelSection(user: user),
+          const SizedBox(height: 8),
+          _ProgressRow(
+            label: AppStrings.level,
+            value: user.level.toDouble(),
+            max: 100,
+            display: 'Lv. ${user.level}',
+          ),
         ],
       ),
     );
   }
 }
 
-class _XpLevelSection extends StatelessWidget {
-  const _XpLevelSection({required this.user});
-
-  final UserModel user;
+class _StreakBadge extends StatelessWidget {
+  const _StreakBadge({required this.streak});
+  final int streak;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _ProgressRow(
-          label: AppStrings.xpPoints,
-          value: user.xp.toDouble(),
-          max: 1000,
-          display: '${user.xp}/1000',
-        ),
-        const SizedBox(height: 10),
-        _ProgressRow(
-          label: AppStrings.level,
-          value: user.level.toDouble(),
-          max: 100,
-          display: '${user.level}/100',
-        ),
-      ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0x33FFFFFF),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          const Text('🔥', style: TextStyle(fontSize: 20)),
+          Text(
+            '$streak day${streak == 1 ? '' : 's'}',
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: AppColors.white,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -91,34 +119,34 @@ class _ProgressRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: Color(0xCCFFFFFF),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Stack(
-          alignment: Alignment.center,
+        Row(
           children: [
-            AppProgressBar(
-              value: value,
-              max: max,
-              height: 22,
-              fillColor: AppColors.barFill,
-              backgroundColor: AppColors.barPink,
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Color(0xCCFFFFFF),
+              ),
             ),
+            const Spacer(),
             Text(
               display,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: AppColors.darkText,
+                color: Color(0xCCFFFFFF),
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 4),
+        AppProgressBar(
+          value: value.clamp(0, max),
+          max: max,
+          height: 14,
+          fillColor: AppColors.barFill,
+          backgroundColor: const Color(0x44FFFFFF),
         ),
       ],
     );

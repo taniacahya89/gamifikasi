@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
 import '../../../core/constants/app_colors.dart';
 import '../../auth/models/user_model.dart';
-import '../../mission/providers/mission_provider.dart';
 
 class StatsRow extends StatelessWidget {
   const StatsRow({super.key, required this.user});
@@ -12,15 +9,17 @@ class StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final completedCount =
-        context.watch<MissionProvider>().completedMissions.length;
-
     return Row(
       children: [
         _StatCard(icon: '⭐', label: 'XP', value: '${user.xp}'),
-        const SizedBox(width: 12),
-        _StatCard(icon: '🏆', label: 'Missions', value: '$completedCount'),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
+        _StatCard(
+            icon: '🏆',
+            label: 'Missions',
+            value: '${user.completedMissionsCount}'),
+        const SizedBox(width: 10),
+        _StatCard(icon: '🔥', label: 'Streak', value: '${user.streak}d'),
+        const SizedBox(width: 10),
         _StatCard(icon: '📈', label: 'Level', value: '${user.level}'),
       ],
     );
@@ -49,15 +48,15 @@ class _StatCard extends StatelessWidget {
             BoxShadow(color: Color(0x0A000000), blurRadius: 6),
           ],
         ),
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         child: Column(
           children: [
-            Text(icon, style: const TextStyle(fontSize: 22)),
+            Text(icon, style: const TextStyle(fontSize: 20)),
             const SizedBox(height: 4),
             Text(
               value,
               style: const TextStyle(
-                fontSize: 20,
+                fontSize: 17,
                 fontWeight: FontWeight.w900,
                 color: AppColors.primary,
               ),
@@ -65,7 +64,7 @@ class _StatCard extends StatelessWidget {
             Text(
               label,
               style: const TextStyle(
-                fontSize: 11,
+                fontSize: 10,
                 color: AppColors.greyText,
                 fontWeight: FontWeight.w600,
               ),

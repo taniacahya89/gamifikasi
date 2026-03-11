@@ -8,6 +8,8 @@ class MissionModel {
   final int totalDays;
   final List<DayModel> days;
   final DateTime createdAt;
+  final bool isTemplate;
+  final DateTime? completedAt;
 
   const MissionModel({
     required this.id,
@@ -17,17 +19,18 @@ class MissionModel {
     this.totalDays = 7,
     required this.days,
     required this.createdAt,
+    this.isTemplate = false,
+    this.completedAt,
   });
 
   int get totalTasks => days.fold(0, (sum, d) => sum + d.tasks.length);
 
-  int get completedTasks =>
-      days.fold(0, (sum, d) => sum + d.completedCount);
+  int get completedTasks => days.fold(0, (sum, d) => sum + d.completedCount);
 
   double get progressPercentage =>
       totalTasks == 0 ? 0 : completedTasks / totalTasks;
 
-  bool get isCompleted => completedTasks == totalTasks && totalTasks > 0;
+  bool get isCompleted => totalTasks > 0 && completedTasks == totalTasks;
 
   MissionModel copyWith({
     String? id,
@@ -37,6 +40,8 @@ class MissionModel {
     int? totalDays,
     List<DayModel>? days,
     DateTime? createdAt,
+    bool? isTemplate,
+    DateTime? completedAt,
   }) {
     return MissionModel(
       id: id ?? this.id,
@@ -46,6 +51,8 @@ class MissionModel {
       totalDays: totalDays ?? this.totalDays,
       days: days ?? this.days,
       createdAt: createdAt ?? this.createdAt,
+      isTemplate: isTemplate ?? this.isTemplate,
+      completedAt: completedAt ?? this.completedAt,
     );
   }
 
@@ -57,6 +64,8 @@ class MissionModel {
         'totalDays': totalDays,
         'days': days.map((d) => d.toMap()).toList(),
         'createdAt': createdAt.toIso8601String(),
+        'isTemplate': isTemplate,
+        'completedAt': completedAt?.toIso8601String(),
       };
 
   factory MissionModel.fromMap(Map<String, dynamic> map) => MissionModel(
@@ -69,6 +78,11 @@ class MissionModel {
                 ?.map((d) => DayModel.fromMap(d))
                 .toList() ??
             [],
-        createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
+        createdAt:
+            DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
+        isTemplate: map['isTemplate'] ?? false,
+        completedAt: map['completedAt'] != null
+            ? DateTime.tryParse(map['completedAt'])
+            : null,
       );
 }
