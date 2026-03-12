@@ -1,13 +1,32 @@
+// ============================================================
+// FILE: user_model.dart
+// FUNGSI: Model data untuk menyimpan semua informasi user.
+//
+// Model ini digunakan di seluruh aplikasi sebagai "blueprint"
+// data user. Setiap perubahan data user (XP naik, streak
+// bertambah, dll) dilakukan dengan membuat salinan baru
+// menggunakan fungsi copyWith().
+// ============================================================
+
 class UserModel {
-  final String id;
-  final String fullName;
-  final String email;
-  final int xp;
-  final int level;
-  final int streak;
-  final int completedMissionsCount;
+  // --- Identitas Akun ---
+  final String id;        // ID unik user (tidak berubah)
+  final String fullName;  // Nama lengkap (bisa diubah di Edit Profile)
+  final String email;     // Email akun (tidak bisa diubah — identitas tetap)
+
+  // --- Statistik Gamifikasi ---
+  final int xp;                      // Total XP yang sudah dikumpulkan user
+  final int level;                   // Level saat ini, dihitung dari total XP
+  final int streak;                  // Jumlah hari berturut-turut user aktif
+  final int completedMissionsCount;  // Berapa mission yang sudah 100% selesai
+
+  // --- Koleksi Badge ---
+  // Badge adalah penghargaan khusus yang diraih user berdasarkan pencapaian.
+  // Contoh badge: '🌟 First Quest', '🔥 On Fire', '💪 Consistent'
   final List<String> badges;
-  final DateTime? lastActivityDate;
+
+  // --- Tracking Aktivitas Harian (untuk sistem streak) ---
+  final DateTime? lastActivityDate; // Tanggal terakhir user menyelesaikan task
 
   const UserModel({
     required this.id,
@@ -21,11 +40,29 @@ class UserModel {
     this.lastActivityDate,
   });
 
-  /// XP needed per level = 1000
+  // ──────────────────────────────────────────────────────────
+  // KONSTANTA SISTEM GAMIFIKASI
+  // ──────────────────────────────────────────────────────────
+
+  /// Jumlah XP yang dibutuhkan untuk naik 1 level.
+  /// Contoh: 0–999 XP = Level 1, 1000–1999 XP = Level 2, dst.
   static const int xpPerLevel = 1000;
-  /// XP reward per completed mission
+
+  /// Jumlah XP yang didapat saat menyelesaikan 1 mission penuh (7 hari).
   static const int xpPerMission = 166;
 
+  // ──────────────────────────────────────────────────────────
+  // FUNGSI UTAMA
+  // ──────────────────────────────────────────────────────────
+
+  /// Membuat salinan UserModel dengan beberapa nilai yang diperbarui.
+  ///
+  /// Kenapa pakai copyWith? Karena objek UserModel bersifat immutable
+  /// (tidak bisa diubah langsung). Jadi setiap kali ada data yang berubah,
+  /// kita buat objek baru dengan data yang sudah diperbarui.
+  ///
+  /// Contoh penggunaan:
+  ///   user.copyWith(xp: 500, level: 2) → UserModel baru dengan XP 500 dan Level 2
   UserModel copyWith({
     String? id,
     String? fullName,
@@ -51,6 +88,8 @@ class UserModel {
     );
   }
 
+  /// Mengubah UserModel menjadi format Map<String, dynamic>.
+  /// Digunakan saat menyimpan data ke database atau local storage.
   Map<String, dynamic> toMap() => {
         'id': id,
         'fullName': fullName,
@@ -63,6 +102,8 @@ class UserModel {
         'lastActivityDate': lastActivityDate?.toIso8601String(),
       };
 
+  /// Membuat UserModel dari data Map (misalnya dari database).
+  /// Menggunakan nilai default jika ada field yang kosong atau null.
   factory UserModel.fromMap(Map<String, dynamic> map) => UserModel(
         id: map['id'] ?? '',
         fullName: map['fullName'] ?? '',

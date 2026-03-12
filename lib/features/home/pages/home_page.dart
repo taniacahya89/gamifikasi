@@ -9,7 +9,6 @@ import '../../auth/providers/auth_provider.dart';
 import '../../mission/providers/mission_provider.dart';
 import '../widgets/home_header.dart';
 import '../widgets/category_card.dart';
-import '../../auth/models/user_model.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});

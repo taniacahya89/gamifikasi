@@ -1,3 +1,28 @@
+// ============================================================
+// FILE: app_router.dart
+// FUNGSI: Mendefinisikan semua rute (halaman) dalam aplikasi.
+//
+// Menggunakan package go_router untuk navigasi deklaratif.
+// Semua path URL dan widget halaman didefinisikan di sini.
+//
+// STRUKTUR NAVIGASI:
+//   /               → SplashScreen (loading awal)
+//   /login          → LoginPage
+//   /signup         → SignUpPage
+//   /home           → HomePage (dalam ShellRoute/bottom nav)
+//   /progress-tab   → ProgressPage (dalam ShellRoute)
+//   /profile-tab    → ProfilePage (dalam ShellRoute)
+//   /mission-list/:category → MissionListPage
+//   /mission/:id    → MissionDetailPage
+//   /create-mission → CreateMissionPage
+//   /mission-progress/:id → MissionProgressDetailPage
+//   /edit-profile   → EditProfilePage
+//
+// SISTEM REDIRECT OTOMATIS:
+//   Jika user belum login dan mencoba buka halaman yang butuh login,
+//   router otomatis mengarahkan ke /login.
+// ============================================================
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -13,37 +38,64 @@ import '../features/profile/pages/edit_profile_page.dart';
 import '../shell/main_shell.dart';
 import '../splash/splash_screen.dart';
 
+/// Kelas berisi konstanta semua path rute.
+/// Gunakan konstanta ini (bukan string langsung) agar tidak typo.
 class AppRoutes {
-  AppRoutes._();
+  AppRoutes._(); // Konstruktor private: kelas tidak bisa di-instansiasi
 
+  // Path halaman statis (tidak berubah)
   static const String splash = '/';
   static const String login = '/login';
   static const String signUp = '/signup';
   static const String createMission = '/create-mission';
   static const String editProfile = '/edit-profile';
 
+  // Path dinamis (menyertakan parameter)
+  /// Path daftar mission berdasarkan kategori.
+  /// Kategori di-encode agar aman untuk URL (misal "Self Growth" → "Self%20Growth")
   static String missionListPath(String category) =>
       '/mission-list/${Uri.encodeComponent(category)}';
+
+  /// Path halaman detail mission berdasarkan ID
   static String missionDetailPath(String id) => '/mission/$id';
+
+  /// Path halaman progress detail mission berdasarkan ID
   static String missionProgressPath(String id) => '/mission-progress/$id';
 }
 
+/// Membuat dan mengembalikan objek GoRouter yang dikonfigurasi penuh.
+///
+/// [context] dibutuhkan untuk membaca AuthProvider
+/// yang digunakan sebagai penjaga (guard) navigasi.
 GoRouter createRouter(BuildContext context) {
   final authProvider = context.read<AuthProvider>();
 
   return GoRouter(
-    initialLocation: AppRoutes.splash,
+    initialLocation: AppRoutes.splash, // Halaman pertama saat aplikasi dibuka
+
+    // refreshListenable: router akan mengevaluasi ulang redirect
+    // setiap kali AuthProvider memanggil notifyListeners().
+    // Ini memastikan user otomatis ke Login saat logout.
     refreshListenable: authProvider,
+
+    // Fungsi redirect: dijalankan sebelum setiap navigasi
     redirect: (context, state) {
-      final isAuth = authProvider.isAuthenticated;
-      final loc = state.matchedLocation;
-      final isPublic = loc == AppRoutes.splash ||
-          loc == AppRoutes.login ||
-          loc == AppRoutes.signUp;
-      if (!isAuth && !isPublic) return AppRoutes.login;
-      return null;
+      final sudahLogin = authProvider.isAuthenticated;
+      final halamanSekarang = state.matchedLocation;
+
+      // Halaman yang boleh diakses tanpa login
+      final halamanPublik = halamanSekarang == AppRoutes.splash ||
+          halamanSekarang == AppRoutes.login ||
+          halamanSekarang == AppRoutes.signUp;
+
+      // Jika belum login dan halaman bukan halaman publik → paksa ke Login
+      if (!sudahLogin && !halamanPublik) return AppRoutes.login;
+
+      return null; // null = biarkan navigasi berjalan normal
     },
+
     routes: [
+      // ── Halaman Publik ────────────────────────────────────────
       GoRoute(
         path: AppRoutes.splash,
         builder: (_, __) => const SplashScreen(),
@@ -56,7 +108,10 @@ GoRouter createRouter(BuildContext context) {
         path: AppRoutes.signUp,
         builder: (_, __) => const SignUpPage(),
       ),
-      // Bottom-nav shell
+
+      // ── Shell Route (Bottom Navigation) ──────────────────────
+      // ShellRoute membungkus 3 tab: Home, Progress, Profile.
+      // MainShell mengelola tampilan bottom navigation bar-nya.
       ShellRoute(
         builder: (_, __, child) => MainShell(child: child),
         routes: [
@@ -74,16 +129,20 @@ GoRouter createRouter(BuildContext context) {
           ),
         ],
       ),
-      // Mission list per category
+
+      // ── Daftar Mission per Kategori ────────────────────────────
+      // :category adalah parameter dinamis yang diekstrak dari URL
       GoRoute(
         path: '/mission-list/:category',
         builder: (context, state) {
-          final cat = Uri.decodeComponent(
+          // Decode kembali kategori dari URL (misal "Self%20Growth" → "Self Growth")
+          final kategori = Uri.decodeComponent(
               state.pathParameters['category'] ?? '');
-          return MissionListPage(category: cat);
+          return MissionListPage(category: kategori);
         },
       ),
-      // Mission detail (daily tasks)
+
+      // ── Detail Mission (checklist task harian) ─────────────────
       GoRoute(
         path: '/mission/:id',
         builder: (context, state) {
@@ -91,15 +150,18 @@ GoRouter createRouter(BuildContext context) {
           return MissionDetailPage(missionId: id);
         },
       ),
-      // Create mission
+
+      // ── Buat Mission Baru ──────────────────────────────────────
+      // [extra] adalah kategori yang sudah dipilih sebelumnya (opsional)
       GoRoute(
         path: AppRoutes.createMission,
         builder: (context, state) {
-          final preselected = state.extra as String?;
-          return CreateMissionPage(preselectedCategory: preselected);
+          final kategoriTerpilih = state.extra as String?;
+          return CreateMissionPage(preselectedCategory: kategoriTerpilih);
         },
       ),
-      // Mission progress detail
+
+      // ── Progress Detail Mission ────────────────────────────────
       GoRoute(
         path: '/mission-progress/:id',
         builder: (context, state) {
@@ -107,6 +169,8 @@ GoRouter createRouter(BuildContext context) {
           return MissionProgressDetailPage(missionId: id);
         },
       ),
+
+      // ── Edit Profil ────────────────────────────────────────────
       GoRoute(
         path: AppRoutes.editProfile,
         builder: (_, __) => const EditProfilePage(),

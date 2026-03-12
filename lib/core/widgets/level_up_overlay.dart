@@ -1,3 +1,16 @@
+// ============================================================
+// FILE: level_up_overlay.dart
+// FUNGSI: Animasi popup yang muncul saat user naik level.
+//
+// Popup ini tampil SETELAH badge popup mission selesai ditutup.
+// Menampilkan ikon api 🔥 yang berdenyut, nama level baru,
+// dan pesan motivasi untuk mendorong user terus aktif.
+//
+// CARA KERJA:
+//   MissionDetailPage memanggil _showLevelUpDialog() setelah
+//   badge popup ditutup, jika AuthProvider.justLeveledUp = true.
+// ============================================================
+
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 
@@ -8,8 +21,8 @@ class LevelUpOverlay extends StatefulWidget {
     required this.onDismiss,
   });
 
-  final int newLevel;
-  final VoidCallback onDismiss;
+  final int newLevel;           // Level baru yang baru dicapai user
+  final VoidCallback onDismiss; // Dipanggil saat user menekan tombol
 
   @override
   State<LevelUpOverlay> createState() => _LevelUpOverlayState();
@@ -17,16 +30,20 @@ class LevelUpOverlay extends StatefulWidget {
 
 class _LevelUpOverlayState extends State<LevelUpOverlay>
     with SingleTickerProviderStateMixin {
+
+  /// Kontroler animasi masuk popup (scale + fade)
   late final AnimationController _ctrl = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 700),
   )..forward();
 
+  // Animasi scale: popup membesar dari kecil dengan efek membal
   late final Animation<double> _scale = CurvedAnimation(
     parent: _ctrl,
     curve: Curves.elasticOut,
   );
 
+  // Animasi fade: popup muncul dari transparan ke terlihat
   late final Animation<double> _fade = Tween<double>(begin: 0, end: 1).animate(
     CurvedAnimation(parent: _ctrl, curve: Curves.easeIn),
   );
@@ -42,6 +59,7 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 28),
       child: FadeTransition(
         opacity: _fade,
         child: ScaleTransition(
@@ -49,8 +67,9 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
           child: Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
+              // Latar gradien ungu gelap → ungu utama
               gradient: const LinearGradient(
-                colors: [Color(0xFF5B3FA8), AppColors.primary],
+                colors: [Color(0xFF4A3396), AppColors.primary],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -58,54 +77,63 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x55000000),
-                  blurRadius: 24,
-                  offset: Offset(0, 8),
+                  blurRadius: 32,
+                  offset: Offset(0, 12),
                 ),
               ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Animated fire icon
-                _PulsingIcon(),
+                // Ikon api yang berdenyut (animasi pulse)
+                _PulsingFireIcon(),
                 const SizedBox(height: 20),
+
+                // Teks "LEVEL UP!"
                 const Text(
                   'LEVEL UP!',
                   style: TextStyle(
-                    fontSize: 28,
+                    fontSize: 30,
                     fontWeight: FontWeight.w900,
                     color: AppColors.white,
-                    letterSpacing: 3,
+                    letterSpacing: 4,
                   ),
                 ),
                 const SizedBox(height: 8),
+
+                // Nomor level baru
                 Text(
-                  'You reached Level ${widget.newLevel}!',
+                  'Kamu mencapai Level ${widget.newLevel}!',
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 17,
                     fontWeight: FontWeight.w700,
                     color: Color(0xCCFFFFFF),
                   ),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+
+                // Kotak pesan motivasi
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 10),
+                      horizontal: 20, vertical: 12),
                   decoration: BoxDecoration(
                     color: const Color(0x33FFFFFF),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Text(
-                    '🌟 Keep building great habits!\nYou\'re unstoppable.',
+                    '🌟 Kebiasaan baikmu terus tumbuh!\nKamu tidak bisa dihentikan.',
                     style: TextStyle(
                       fontSize: 13,
                       color: AppColors.white,
-                      height: 1.5,
+                      height: 1.6,
                     ),
                     textAlign: TextAlign.center,
                   ),
                 ),
                 const SizedBox(height: 24),
+
+                // Tombol tutup popup
                 GestureDetector(
                   onTap: widget.onDismiss,
                   child: Container(
@@ -116,9 +144,9 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: const Text(
-                      'AWESOME! 🎉',
+                      'KEREN BANGET! 🎉',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: FontWeight.w900,
                         color: AppColors.primary,
                         letterSpacing: 1,
@@ -135,19 +163,27 @@ class _LevelUpOverlayState extends State<LevelUpOverlay>
   }
 }
 
-class _PulsingIcon extends StatefulWidget {
+// ──────────────────────────────────────────────────────────────
+// WIDGET PEMBANTU: Ikon api yang berdenyut
+// ──────────────────────────────────────────────────────────────
+
+/// Ikon 🔥 di dalam lingkaran yang berdenyut naik-turun (pulse effect).
+/// Animasi repeat + reverse membuat ikon terlihat hidup.
+class _PulsingFireIcon extends StatefulWidget {
   @override
-  State<_PulsingIcon> createState() => _PulsingIconState();
+  State<_PulsingFireIcon> createState() => _PulsingFireIconState();
 }
 
-class _PulsingIconState extends State<_PulsingIcon>
+class _PulsingFireIconState extends State<_PulsingFireIcon>
     with SingleTickerProviderStateMixin {
+
+  /// Kontroler animasi denyut: scale naik ke 1.15 lalu turun kembali
   late final AnimationController _pulse = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 800),
-    lowerBound: 0.9,
-    upperBound: 1.1,
-  )..repeat(reverse: true);
+    duration: const Duration(milliseconds: 700),
+    lowerBound: 0.88,
+    upperBound: 1.12,
+  )..repeat(reverse: true); // Bolak-balik (naik → turun → naik → ...)
 
   @override
   void dispose() {
@@ -165,16 +201,17 @@ class _PulsingIconState extends State<_PulsingIcon>
         decoration: BoxDecoration(
           color: const Color(0x33FFFFFF),
           shape: BoxShape.circle,
+          // Efek cahaya ungu di sekitar lingkaran
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.5),
+              color: AppColors.primary.withOpacity(0.6),
               blurRadius: 30,
-              spreadRadius: 5,
+              spreadRadius: 6,
             ),
           ],
         ),
         child: const Center(
-          child: Text('🔥', style: TextStyle(fontSize: 48)),
+          child: Text('🔥', style: TextStyle(fontSize: 46)),
         ),
       ),
     );
