@@ -30,12 +30,12 @@ class HomePage extends StatelessWidget {
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: HomeHeader(user: user)),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+          const SliverPadding(
+            padding: EdgeInsets.fromLTRB(20, 24, 20, 12),
             sliver: SliverToBoxAdapter(
               child: Text(
                 AppStrings.dailyActivity,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                   color: AppColors.primary,

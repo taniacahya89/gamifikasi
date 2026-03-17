@@ -25,7 +25,7 @@ class ProgressPage extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(child: const _ProgressHeader()),
+          const SliverToBoxAdapter(child: _ProgressHeader()),
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
             sliver: SliverToBoxAdapter(

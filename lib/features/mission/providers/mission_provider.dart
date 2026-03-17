@@ -23,6 +23,8 @@ import '../models/mission_model.dart';
 import '../models/day_model.dart';
 import '../models/task_model.dart';
 import '../../auth/models/user_model.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../../core/services/api_service.dart';
 
 /// Tipe fungsi callback yang dipanggil saat mission selesai.
 /// [xpEarned] adalah jumlah XP yang akan diberikan ke user.
@@ -39,6 +41,9 @@ class MissionProvider extends ChangeNotifier {
   /// Callback ke AuthProvider — dipasang dari main.dart.
   /// Dipanggil saat sebuah mission baru saja selesai 100%.
   MissionCompletedCallback? onMissionCompleted;
+
+  /// Service untuk komunikasi dengan backend
+  final ApiService _apiService = ApiService();
 
   // ──────────────────────────────────────────────────────────
   // GETTERS
@@ -259,9 +264,20 @@ class MissionProvider extends ChangeNotifier {
   ///
   /// Hanya bisa digunakan untuk mission custom (bukan template).
   /// Dipanggil dari MissionListPage saat user menekan ikon hapus.
-  void deleteMission(String id) {
+  /// Juga menghapus dari backend jika user sudah login.
+  Future<void> deleteMission(String id, String? token) async {
     _missions.removeWhere((m) => m.id == id);
     notifyListeners();
+
+    // Jika user sudah login, hapus juga dari backend
+    if (token != null) {
+      try {
+        await _apiService.deleteMission(token, id);
+      } catch (e) {
+        // Jika gagal menghapus dari backend, biarkan saja
+        // karena data lokal sudah dihapus
+      }
+    }
   }
 
   /// Mencentang atau membatalkan centang sebuah task.
@@ -270,6 +286,7 @@ class MissionProvider extends ChangeNotifier {
   ///   [missionId]  → ID mission yang task-nya diubah
   ///   [dayIndex]   → Indeks hari (0 = Hari 1, 6 = Hari 7)
   ///   [taskIndex]  → Indeks task dalam hari tersebut
+  ///   [authProvider] → Untuk mendapatkan token dan update progress
   ///
   /// ALUR LENGKAP:
   ///   1. Cari mission di daftar menggunakan missionId
@@ -279,9 +296,15 @@ class MissionProvider extends ChangeNotifier {
   ///   5. Cek apakah SEMUA task di semua hari sudah selesai
   ///   6. Jika mission baru saja selesai → panggil onMissionCompleted()
   ///      → AuthProvider menerima callback → XP ditambahkan ke user
+  ///   7. Jika user login, update progress ke backend
   ///
   /// MENGEMBALIKAN: true jika mission baru saja selesai, false jika belum.
-  bool toggleTask(String missionId, int dayIndex, int taskIndex) {
+  Future<bool> toggleTask(
+    String missionId, 
+    int dayIndex, 
+    int taskIndex, 
+    AuthProvider authProvider
+  ) async {
     final idx = _missions.indexWhere((m) => m.id == missionId);
     if (idx == -1) return false; // Mission tidak ditemukan, hentikan
 
@@ -319,6 +342,17 @@ class MissionProvider extends ChangeNotifier {
     if (!sudahSelesaiSebelumnya && missionTerupdate.isCompleted) {
       // Kirim XP ke AuthProvider lewat callback
       onMissionCompleted?.call(UserModel.xpPerMission);
+      
+      // Jika user login, update ke backend
+      if (authProvider.token != null) {
+        try {
+          await _apiService.completeMission(authProvider.token!, missionId);
+        } catch (e) {
+          // Jika gagal update ke backend, biarkan saja
+          // karena data lokal sudah diperbarui
+        }
+      }
+      
       return true; // Beritahu pemanggil bahwa mission baru selesai
     }
     return false;

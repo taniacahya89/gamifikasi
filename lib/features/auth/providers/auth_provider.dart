@@ -15,7 +15,10 @@
 // ============================================================
 
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../models/user_model.dart';
+import '../../../core/services/api_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   // ──────────────────────────────────────────────────────────
@@ -25,6 +28,7 @@ class AuthProvider extends ChangeNotifier {
   UserModel? _user;        // Data user yang sedang login (null = belum login)
   bool _isLoading = false; // Status loading saat proses autentikasi berjalan
   String? _errorMessage;   // Pesan error jika login/signup gagal
+  String? _token;          // Token autentikasi dari backend
 
   // --- State Notifikasi Level-Up ---
   // Dua variabel ini digunakan untuk memberi tahu MissionDetailPage
@@ -47,6 +51,9 @@ class AuthProvider extends ChangeNotifier {
   /// Pesan error terakhir (null jika tidak ada error)
   String? get errorMessage => _errorMessage;
 
+  /// Token autentikasi (null jika belum login)
+  String? get token => _token;
+
   /// true jika user baru saja naik level (digunakan MissionDetailPage)
   bool get justLeveledUp => _justLeveledUp;
 
@@ -59,8 +66,8 @@ class AuthProvider extends ChangeNotifier {
 
   /// Masuk ke akun dengan email dan password.
   ///
-  /// Saat ini menggunakan mock/simulasi (belum terhubung ke server).
-  /// Jika berhasil: data user dibuat dan disimpan → router otomatis
+  /// Menghubungi backend API untuk autentikasi.
+  /// Jika berhasil: menyimpan token dan data user → router otomatis
   ///   mengarahkan ke halaman Home karena isAuthenticated menjadi true.
   /// Jika gagal: _errorMessage diisi dengan pesan error.
   ///
@@ -68,36 +75,40 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners(); // Beritahu UI: tampilkan loading
-
-    // Simulasi delay seperti memanggil API server
-    await Future.delayed(const Duration(seconds: 1));
-
-    if (email.isNotEmpty && password.length >= 6) {
-      // Buat data user (di aplikasi nyata: data ini dari response server)
-      _user = UserModel(
-        id: '1',
-        fullName: 'Rahma',
-        email: email,
-        xp: 0,
-        level: 1,
-        streak: 0,
-        completedMissionsCount: 0,
-        badges: [],
-      );
-      _isLoading = false;
-      notifyListeners(); // Beritahu UI: login berhasil, update tampilan
-      return true;
-    }
-
-    _errorMessage = 'Email atau password salah';
-    _isLoading = false;
     notifyListeners();
-    return false;
+
+    try {
+      final apiService = ApiService();
+      final result = await apiService.login(email, password);
+      
+      if (result['success']) {
+        final userData = result['data']['data']['user'];
+        _token = result['data']['data']['token'];
+        _user = UserModel.fromJson(userData);
+        
+        // Simpan token dan data user ke SharedPreferences
+        await _saveAuthData(_token!, userData);
+        
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = result['error'];
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = 'Gagal terhubung ke server';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
   }
 
   /// Mendaftarkan akun baru dengan nama, email, dan password.
   ///
+  /// Menghubungi backend API untuk registrasi.
   /// Jika berhasil: user langsung masuk ke sesi login.
   /// Mengembalikan true jika signup berhasil, false jika gagal.
   Future<bool> signUp(String fullName, String email, String password) async {
@@ -105,49 +116,118 @@ class AuthProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 1));
-
-    if (fullName.isNotEmpty && email.isNotEmpty && password.length >= 6) {
-      _user = UserModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        fullName: fullName,
-        email: email,
-        xp: 0,
-        level: 1,
-        streak: 0,
-        completedMissionsCount: 0,
-        badges: [],
-      );
+    try {
+      final apiService = ApiService();
+      final result = await apiService.register(fullName, email, password);
+      
+      if (result['success']) {
+        final userData = result['data']['data']['user'];
+        _token = result['data']['data']['token'];
+        _user = UserModel.fromJson(userData);
+        
+        // Simpan token dan data user ke SharedPreferences
+        await _saveAuthData(_token!, userData);
+        
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = result['error'];
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = 'Gagal terhubung ke server';
       _isLoading = false;
       notifyListeners();
-      return true;
+      return false;
     }
-
-    _errorMessage = 'Mohon isi semua kolom dengan benar';
-    _isLoading = false;
-    notifyListeners();
-    return false;
   }
 
   /// Memperbarui data user secara langsung.
   /// Digunakan dari EditProfilePage saat user mengubah nama.
   ///
-  /// Menerima objek UserModel baru yang sudah diubah.
+  /// Menghubungi backend API untuk update data user.
   /// Setelah dipanggil, semua widget yang menampilkan data user
   /// akan otomatis diperbarui oleh notifyListeners().
-  void updateUser(UserModel updated) {
-    _user = updated;
-    notifyListeners();
+  Future<bool> updateUser(UserModel updated) async {
+    if (_token == null) return false;
+
+    try {
+      final apiService = ApiService();
+      final result = await apiService.updateProfile(_token!, updated.toJson());
+      
+      if (result['success']) {
+        _user = UserModel.fromJson(result['data']);
+        // Update data di SharedPreferences
+        await _saveAuthData(_token!, result['data']);
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = result['error'];
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = 'Gagal memperbarui profil';
+      notifyListeners();
+      return false;
+    }
   }
 
   /// Keluar dari akun (logout).
   ///
-  /// Menghapus semua data sesi user. Setelah ini:
-  ///   isAuthenticated = false → router otomatis ke halaman Login.
-  void logout() {
+  /// Menghapus semua data sesi user dari memory dan SharedPreferences.
+  /// Setelah ini: isAuthenticated = false → router otomatis ke halaman Login.
+  Future<void> logout() async {
     _user = null;
+    _token = null;
     _justLeveledUp = false;
+    
+    // Hapus data dari SharedPreferences
+    await _clearAuthData();
+    
     notifyListeners();
+  }
+
+  /// Load auth data dari SharedPreferences saat aplikasi dibuka
+  Future<void> loadAuthData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      final userData = prefs.getString('user_data');
+      
+      if (token != null && userData != null) {
+        _token = token;
+        _user = UserModel.fromJson(jsonDecode(userData));
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error loading auth data: $e');
+    }
+  }
+
+  /// Simpan auth data ke SharedPreferences
+  Future<void> _saveAuthData(String token, Map<String, dynamic> userData) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_token', token);
+      await prefs.setString('user_data', jsonEncode(userData));
+    } catch (e) {
+      print('Error saving auth data: $e');
+    }
+  }
+
+  /// Hapus auth data dari SharedPreferences
+  Future<void> _clearAuthData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('auth_token');
+      await prefs.remove('user_data');
+    } catch (e) {
+      print('Error clearing auth data: $e');
+    }
   }
 
   // ──────────────────────────────────────────────────────────

@@ -64,20 +64,21 @@ class _MissionDetailPageState extends State<MissionDetailPage> {
     final authProvider = context.read<AuthProvider>();
 
     // Centang/batalkan centang task, dapatkan info apakah mission selesai
-    final missionBaruSelesai = missionProvider.toggleTask(
+    missionProvider.toggleTask(
       widget.missionId,
       dayIndex,
       taskIndex,
-    );
+      authProvider,
+    ).then((missionBaruSelesai) {
+      // Catat aktivitas hari ini untuk sistem streak
+      authProvider.recordActivity();
 
-    // Catat aktivitas hari ini untuk sistem streak
-    authProvider.recordActivity();
-
-    // Jika mission baru saja selesai dan belum ada popup yang tampil
-    if (missionBaruSelesai && !_sedangTampilPopup) {
-      _sedangTampilPopup = true;
-      _tampilkanBadgePopup();
-    }
+      // Jika mission baru saja selesai dan belum ada popup yang tampil
+      if (missionBaruSelesai && !_sedangTampilPopup) {
+        _sedangTampilPopup = true;
+        _tampilkanBadgePopup();
+      }
+    });
   }
 
   /// Menampilkan popup badge reward setelah mission selesai.
@@ -141,9 +142,9 @@ class _MissionDetailPageState extends State<MissionDetailPage> {
 
     // Tampilkan error jika mission tidak ditemukan (misal sudah dihapus)
     if (mission == null) {
-      return Scaffold(
-        appBar: const CustomAppBar(title: AppStrings.missionDetail),
-        body: const Center(
+      return const Scaffold(
+        appBar: CustomAppBar(title: AppStrings.missionDetail),
+        body: Center(
           child: Text('Mission tidak ditemukan'),
         ),
       );

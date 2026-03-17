@@ -137,7 +137,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   const SizedBox(height: 32),
 
                   // ── Input Nama Lengkap (BISA diubah) ──────────────
-                  _FieldLabel('Nama Lengkap'),
+                  const _FieldLabel('Nama Lengkap'),
                   const SizedBox(height: 8),
                   CustomTextField(
                     controller: _namaController,
@@ -146,7 +146,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   const SizedBox(height: 20),
 
                   // ── Info Email (TIDAK bisa diubah) ─────────────────
-                  _FieldLabel('Email'),
+                  const _FieldLabel('Email'),
                   const SizedBox(height: 8),
 
                   // Email ditampilkan sebagai kotak info, bukan input

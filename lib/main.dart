@@ -92,6 +92,15 @@ class _RouterAppState extends State<_RouterApp> {
   late final _router = createRouter(context);
 
   @override
+  void initState() {
+    super.initState();
+    // Load auth data saat aplikasi pertama kali dibuka
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthProvider>().loadAuthData();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'HabitQuest',

@@ -11,6 +11,7 @@ import '../providers/mission_provider.dart';
 import '../models/mission_model.dart';
 import '../widgets/mission_card_item.dart';
 import '../../home/widgets/category_card.dart';
+import '../../auth/providers/auth_provider.dart';
 
 class MissionListPage extends StatelessWidget {
   const MissionListPage({super.key, required this.category});
@@ -45,7 +46,7 @@ class MissionListPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (templates.isNotEmpty) ...[
-                          _SectionLabel('📋 Mission Templates'),
+                          const _SectionLabel('📋 Mission Templates'),
                           const SizedBox(height: 10),
                           ...templates.map((m) => Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
@@ -58,7 +59,7 @@ class MissionListPage extends StatelessWidget {
                           const SizedBox(height: 8),
                         ],
                         if (custom.isNotEmpty) ...[
-                          _SectionLabel('✏️ My Missions'),
+                          const _SectionLabel('✏️ My Missions'),
                           const SizedBox(height: 10),
                           ...custom.map((m) => Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
@@ -66,8 +67,10 @@ class MissionListPage extends StatelessWidget {
                                   mission: m,
                                   onTap: () => context.push(
                                       AppRoutes.missionDetailPath(m.id)),
-                                  onDelete: () =>
-                                      provider.deleteMission(m.id),
+                                  onDelete: () {
+                                    final authProvider = context.read<AuthProvider>();
+                                    provider.deleteMission(m.id, authProvider.token);
+                                  },
                                 ),
                               )),
                           const SizedBox(height: 8),

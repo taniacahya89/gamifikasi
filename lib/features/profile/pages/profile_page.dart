@@ -52,13 +52,13 @@ class ProfilePage extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // ── Bagian 3: Koleksi Badge ──────────────────────────
-                  _SectionTitle('🎖️ Koleksi Badge'),
+                  const _SectionTitle('🎖️ Koleksi Badge'),
                   const SizedBox(height: 12),
                   _BadgeSection(user: user),
                   const SizedBox(height: 24),
 
                   // ── Bagian 4: Aksi Akun ──────────────────────────────
-                  _SectionTitle('⚙️ Akun'),
+                  const _SectionTitle('⚙️ Akun'),
                   const SizedBox(height: 12),
                   _AccountActions(user: user),
                   const SizedBox(height: 40),

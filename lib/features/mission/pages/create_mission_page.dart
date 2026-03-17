@@ -110,7 +110,7 @@ class _CreateMissionPageState extends State<CreateMissionPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _SectionLabel(AppStrings.missionTitle),
+                    const _SectionLabel(AppStrings.missionTitle),
                     const SizedBox(height: 8),
                     CustomTextField(
                       controller: _titleController,
@@ -119,7 +119,7 @@ class _CreateMissionPageState extends State<CreateMissionPage> {
                           (v == null || v.isEmpty) ? 'Required' : null,
                     ),
                     const SizedBox(height: 16),
-                    _SectionLabel(AppStrings.missionDescription),
+                    const _SectionLabel(AppStrings.missionDescription),
                     const SizedBox(height: 8),
                     CustomTextField(
                       controller: _descController,
@@ -127,7 +127,7 @@ class _CreateMissionPageState extends State<CreateMissionPage> {
                       maxLines: 3,
                     ),
                     const SizedBox(height: 16),
-                    _SectionLabel(AppStrings.selectCategory),
+                    const _SectionLabel(AppStrings.selectCategory),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -142,7 +142,7 @@ class _CreateMissionPageState extends State<CreateMissionPage> {
                       }).toList(),
                     ),
                     const SizedBox(height: 24),
-                    _SectionLabel('Daily Tasks'),
+                    const _SectionLabel('Daily Tasks'),
                     const SizedBox(height: 12),
                     ...List.generate(7, (dayIndex) {
                       return _DayTaskSection(

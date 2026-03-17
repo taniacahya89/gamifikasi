@@ -123,15 +123,15 @@ class _MissionCompletePopupState extends State<MissionCompletePopup>
   _BadgeData _getBadgeData() {
     switch (widget.category) {
       case 'Mindset':
-        return _BadgeData(
+        return const _BadgeData(
           emoji: '🧠',
           badgeLabel: 'Mindset Master',
-          warna: const Color(0xFF7BB8D4),
-          warnaLatar: const Color(0xFFEAF3FB),
+          warna: Color(0xFF7BB8D4),
+          warnaLatar: Color(0xFFEAF3FB),
           pesanApresiasi: 'Pikiran positifmu kini semakin kuat!\nTerus jaga mindset terbaikmu.',
         );
       case 'Health':
-        return _BadgeData(
+        return const _BadgeData(
           emoji: '💚',
           badgeLabel: 'Wellness Champion',
           warna: AppColors.successGreen,
@@ -139,7 +139,7 @@ class _MissionCompletePopupState extends State<MissionCompletePopup>
           pesanApresiasi: 'Tubuhmu berterima kasih kepadamu!\nKebiasaan sehatmu sudah terbentuk.',
         );
       case 'Productivity':
-        return _BadgeData(
+        return const _BadgeData(
           emoji: '⚡',
           badgeLabel: 'Focus Hero',
           warna: AppColors.coral,
@@ -147,15 +147,15 @@ class _MissionCompletePopupState extends State<MissionCompletePopup>
           pesanApresiasi: 'Produktivitasmu meningkat pesat!\nKamu adalah mesin pencapaian sejati.',
         );
       case 'Finance':
-        return _BadgeData(
+        return const _BadgeData(
           emoji: '💰',
           badgeLabel: 'Money Wise',
           warna: AppColors.iconTeal,
-          warnaLatar: const Color(0xFFE8F4FB),
+          warnaLatar: Color(0xFFE8F4FB),
           pesanApresiasi: 'Kebiasaan finansialmu makin solid!\nMasa depanmu semakin cerah.',
         );
       case 'Self Growth':
-        return _BadgeData(
+        return const _BadgeData(
           emoji: '🌸',
           badgeLabel: 'Growth Seeker',
           warna: AppColors.primary,
@@ -163,7 +163,7 @@ class _MissionCompletePopupState extends State<MissionCompletePopup>
           pesanApresiasi: 'Kamu terus bertumbuh setiap harinya!\nVersi terbaikmu sedang berkembang.',
         );
       case 'Lifestyle':
-        return _BadgeData(
+        return const _BadgeData(
           emoji: '🌿',
           badgeLabel: 'Life Balancer',
           warna: AppColors.iconGreen,
@@ -171,7 +171,7 @@ class _MissionCompletePopupState extends State<MissionCompletePopup>
           pesanApresiasi: 'Hidupmu semakin seimbang dan bermakna!\nNikmati setiap momen terbaikmu.',
         );
       default:
-        return _BadgeData(
+        return const _BadgeData(
           emoji: '🏅',
           badgeLabel: 'Quest Finisher',
           warna: AppColors.primary,

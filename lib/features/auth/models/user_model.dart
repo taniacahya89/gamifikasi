@@ -117,4 +117,33 @@ class UserModel {
             ? DateTime.tryParse(map['lastActivityDate'])
             : null,
       );
+
+  /// Membuat UserModel dari JSON response dari backend API.
+  /// Digunakan saat menerima data dari server.
+  factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
+        id: json['_id'] ?? json['id'] ?? '',
+        fullName: json['fullName'] ?? '',
+        email: json['email'] ?? '',
+        xp: json['xp'] ?? 0,
+        level: json['level'] ?? 1,
+        streak: json['streak'] ?? 0,
+        completedMissionsCount: json['completedMissionsCount'] ?? 0,
+        badges: List<String>.from(json['badges'] ?? []),
+        lastActivityDate: json['lastActivityDate'] != null
+            ? DateTime.tryParse(json['lastActivityDate'])
+            : null,
+      );
+
+  /// Mengubah UserModel menjadi JSON untuk dikirim ke backend API.
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'fullName': fullName,
+        'email': email,
+        'xp': xp,
+        'level': level,
+        'streak': streak,
+        'completedMissionsCount': completedMissionsCount,
+        'badges': badges,
+        'lastActivityDate': lastActivityDate?.toIso8601String(),
+      };
 }
