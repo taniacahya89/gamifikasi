@@ -8,6 +8,9 @@ import '../../features/mission/models/mission_model.dart';
 class ApiService {
   // Base URL backend - local IP untuk testing di device fisik
   static const String baseUrl = 'http://192.168.18.171:3000/api';
+
+  // Batas waktu tunggu untuk setiap request ke server
+  static const Duration _timeout = Duration(seconds: 10);
   
   final http.Client _client = http.Client();
 
@@ -38,7 +41,7 @@ class ApiService {
         'email': email,
         'password': password,
       }),
-    );
+    ).timeout(_timeout);
 
     return _handleResponse(response);
   }
@@ -53,7 +56,7 @@ class ApiService {
         'email': email,
         'password': password,
       }),
-    );
+    ).timeout(_timeout);
 
     return _handleResponse(response);
   }
@@ -63,7 +66,7 @@ class ApiService {
     final response = await _client.get(
       Uri.parse('$baseUrl/auth/profile'),
       headers: getHeaders(token: token),
-    );
+    ).timeout(_timeout);
 
     return _handleResponse(response);
   }
@@ -74,7 +77,7 @@ class ApiService {
       Uri.parse('$baseUrl/auth/profile'),
       headers: getHeaders(token: token),
       body: jsonEncode(data),
-    );
+    ).timeout(_timeout);
 
     return _handleResponse(response);
   }
@@ -87,7 +90,7 @@ class ApiService {
     final response = await _client.get(
       Uri.parse('$baseUrl/missions'),
       headers: getHeaders(token: token),
-    );
+    ).timeout(_timeout);
 
     return _handleResponse(response);
   }
@@ -97,7 +100,7 @@ class ApiService {
     final response = await _client.get(
       Uri.parse('$baseUrl/missions/$missionId'),
       headers: getHeaders(token: token),
-    );
+    ).timeout(_timeout);
 
     return _handleResponse(response);
   }
@@ -107,7 +110,7 @@ class ApiService {
     final response = await _client.get(
       Uri.parse('$baseUrl/missions/category/$category'),
       headers: getHeaders(token: token),
-    );
+    ).timeout(_timeout);
 
     return _handleResponse(response);
   }
@@ -118,7 +121,7 @@ class ApiService {
       Uri.parse('$baseUrl/missions'),
       headers: getHeaders(token: token),
       body: jsonEncode(missionData),
-    );
+    ).timeout(_timeout);
 
     return _handleResponse(response);
   }
@@ -128,7 +131,7 @@ class ApiService {
     final response = await _client.delete(
       Uri.parse('$baseUrl/missions/$missionId'),
       headers: getHeaders(token: token),
-    );
+    ).timeout(_timeout);
 
     return _handleResponse(response);
   }
@@ -141,7 +144,7 @@ class ApiService {
       body: jsonEncode({
         'missionId': missionId,
       }),
-    );
+    ).timeout(_timeout);
 
     return _handleResponse(response);
   }
@@ -154,7 +157,7 @@ class ApiService {
       body: jsonEncode({
         'missionId': missionId,
       }),
-    );
+    ).timeout(_timeout);
 
     return _handleResponse(response);
   }
@@ -164,7 +167,7 @@ class ApiService {
     final response = await _client.get(
       Uri.parse('$baseUrl/missions/user/progress'),
       headers: getHeaders(token: token),
-    );
+    ).timeout(_timeout);
 
     return _handleResponse(response);
   }
@@ -176,16 +179,6 @@ class ApiService {
   Map<String, dynamic> _handleResponse(http.Response response) {
     final statusCode = response.statusCode;
     final body = response.body;
-
-    // Add timeout handling
-    if (response == null) {
-      return {
-        'success': false,
-        'error': 'Request timed out',
-        'status': 408,
-        'data': null,
-      };
-    }
 
     try {
       final jsonResponse = jsonDecode(body);

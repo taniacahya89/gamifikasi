@@ -16,6 +16,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
 import 'dart:convert';
 import '../models/user_model.dart';
 import '../../../core/services/api_service.dart';
@@ -99,7 +100,9 @@ class AuthProvider extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      _errorMessage = 'Gagal terhubung ke server';
+      _errorMessage = e is TimeoutException
+          ? 'Koneksi ke server timeout. Periksa koneksi internet Anda.'
+          : 'Gagal terhubung ke server';
       _isLoading = false;
       notifyListeners();
       return false;
@@ -138,7 +141,9 @@ class AuthProvider extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      _errorMessage = 'Gagal terhubung ke server';
+      _errorMessage = e is TimeoutException
+          ? 'Koneksi ke server timeout. Periksa koneksi internet Anda.'
+          : 'Gagal terhubung ke server';
       _isLoading = false;
       notifyListeners();
       return false;
